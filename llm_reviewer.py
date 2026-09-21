@@ -8,13 +8,13 @@ def build_review_prompt(code: str, standards: list[StandardRule]) -> str:
     for rule in standards:
 
         standards_text += f"""
-Rule ID: {rule.id}
-Section: {rule.section}
-Title: {rule.title}
-Severity: {rule.severity}
-Standard: {rule.standard}
+            Rule ID: {rule.id}
+            Section: {rule.section}
+            Title: {rule.title}
+            Severity: {rule.severity}
+            Standard: {rule.standard}
 
-"""
+            """
 
     prompt = f"""
 Review the following Oracle PL/SQL code against the

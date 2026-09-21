@@ -2,50 +2,128 @@ from models import StandardRule
 
 
 def extract_rules(content):
-
     rules = []
-
     rule_number = 1
+
     current_section = "General"
+
+    section_names = [
+        "Naming Conventions",
+        "Formatting & Layout",
+        "Data Types & Declarations",
+        "SQL & Collection Operations",
+        "Exception & Error Handling",
+        "Performance & Compiler Enhancements",
+        "Security & Code Integrity"
+    ]
 
     for item in content:
 
-        # ==================================================
-        # Paragraph
-        # ==================================================
+        # --------------------------------------------------
+        # PARAGRAPHS
+        # --------------------------------------------------
 
         if item["type"] == "paragraph":
 
             text = item["text"].strip()
 
-            # Detect major sections
-            if "Naming Conventions" in text:
-                current_section = "Naming Conventions"
+            if not text:
+                continue
 
-            elif "Formatting & Layout" in text:
-                current_section = "Formatting & Layout"
+            # Detect section
+            for section in section_names:
+                if section in text:
+                    current_section = section
+                    break
 
-            elif "Data Types & Declarations" in text:
-                current_section = "Data Types & Declarations"
+            # Ignore section headings
+            if text in section_names:
+                continue
 
-            elif "SQL & Collection Operations" in text:
-                current_section = "SQL & Collection Operations"
+            # Ignore document title
+            if text.startswith("PL/SQL Coding Standards"):
+                continue
 
-            elif "Exception & Error Handling" in text:
-                current_section = "Exception & Error Handling"
+            # Ignore obvious explanatory text
+            if (
+                text.startswith("Consistent naming conventions")
+                or text.startswith("sql")
+                or text == "Use code with caution."
+            ):
+                continue
 
-            elif "Performance & Compiler Enhancements" in text:
-                current_section = "Performance & Compiler Enhancements"
+            # --------------------------------------------------
+            # Detect bullet-style standards
+            # --------------------------------------------------
 
-            elif "Security & Code Integrity" in text:
-                current_section = "Security & Code Integrity"
+            cleaned_text = text
 
-            continue
+            # Remove common bullet characters
+            for bullet in ["-", "•", "–", "—"]:
+                if cleaned_text.startswith(bullet):
+                    cleaned_text = cleaned_text[1:].strip()
 
+            # Detect cursor rule
+            if (
+                "Explicit cursors must be closed"
+                in cleaned_text
+            ):
+                rule = StandardRule(
+                    id=f"DOC-{rule_number:03d}",
+                    section=current_section,
+                    title="Cursor Management",
+                    severity="MEDIUM",
+                    standard=cleaned_text
+                )
 
-        # ==================================================
-        # Table
-        # ==================================================
+                rules.append(rule)
+                rule_number += 1
+                continue
+
+            # Detect other meaningful standards
+            # starting with common rule indicators.
+            if any(
+                cleaned_text.lower().startswith(prefix)
+                for prefix in [
+                    "tables:",
+                    "packages:",
+                    "file architecture:",
+                    "case consistency:",
+                    "indentation:",
+                    "block labels:",
+                    "anchored declarations:",
+                    "native arithmetic:",
+                    "string character semantics:",
+                    "boolean evaluations:",
+                    "bulk processing:",
+                    "19c qualified expressions:",
+                    "explicit column lists:",
+                    "no blank handlers:",
+                    "centralized logging:",
+                    "modern diagnostic tracking:",
+                    "udf pragma:",
+                    "nocopy hint:",
+                    "compiler optimization level:",
+                    "dynamic sql binding:",
+                    "privilege control:"
+                ]
+            ):
+                rule = StandardRule(
+                    id=f"DOC-{rule_number:03d}",
+                    section=current_section,
+                    title=cleaned_text.split(":")[0].strip(),
+                    severity="MEDIUM",
+                    standard=cleaned_text
+                )
+
+                rules.append(rule)
+                rule_number += 1
+
+                continue
+
+        # --------------------------------------------------
+        # TABLES
+        # --------------------------------------------------
 
         if item["type"] == "table":
 
@@ -54,20 +132,10 @@ def extract_rules(content):
             if not rows:
                 continue
 
-
-            # ------------------------------------------------
-            # Get table header
-            # ------------------------------------------------
-
             header = [
                 cell.strip().lower()
                 for cell in rows[0]
             ]
-
-
-            # ------------------------------------------------
-            # Naming prefix table
-            # ------------------------------------------------
 
             if (
                 "prefix" in header
@@ -87,27 +155,18 @@ def extract_rules(content):
                     if len(row) >= 3:
                         example = row[2].strip()
 
-
                     if not prefix or not scope:
                         continue
-
-
-                    # Build standard description
 
                     standard_text = (
                         f"{scope} must use the "
                         f"'{prefix}' prefix."
                     )
 
-
                     if example:
-
                         standard_text += (
                             f" Example: {example}"
                         )
-
-
-                    # Create rule
 
                     rule = StandardRule(
                         id=f"DOC-{rule_number:03d}",
@@ -117,10 +176,7 @@ def extract_rules(content):
                         standard=standard_text
                     )
 
-
                     rules.append(rule)
-
                     rule_number += 1
-
 
     return rules

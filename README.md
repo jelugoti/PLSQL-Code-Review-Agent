@@ -130,3 +130,15 @@ No company-specific source code or confidential standards are included.
 - Review history and reporting
 - Repository-level code review
 - Private/self-hosted LLM
+
+
+## Additional Notes:
+
+File	              Responsibility
+standards_reader.py	Read DOCX
+rule_extractor.py	Extract standards
+models.py	       Define structure of a standard
+llm_reviewer.py	Build review prompt
+llm_client.py	       Communicate with LLM
+reviewer.py	       Orchestrate review
+app.py	              Streamlit UI

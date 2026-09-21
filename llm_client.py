@@ -1,6 +1,5 @@
 import os
 from urllib import response
-from urllib import response
 
 from dotenv import load_dotenv
 from groq import Groq
